@@ -1,0 +1,187 @@
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <style>
+			body {
+				background-color: white;
+				font-family: Helvetica, Arial, sans-serif;
+			}
+
+			#biaoti{
+				font-size: 28px;
+				font-weight: bold;
+				padding: 0 20%；
+				margin:20px auto;
+				text-align:center;
+			}
+			span{
+				font-size: 24px;
+				font-weight: normal;
+			}
+
+			svg {
+				background-color: white;
+			}
+			#scatter_plot{
+				margin: 0 auto;
+				text-align:center;
+			}
+			#wenben{
+				margin:0 auto;
+				width:60%;
+				text-align:justify;
+				text-indent: 2em;
+			}
+			#beizhu{
+				margin:0 auto;
+				width:60%;
+				text-align:justify;
+			}
+			circle:hover {
+				fill: orange;
+			}
+
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: black;
+				shape-rendering: crispEdges;
+			}
+
+			.axis text {
+				font-family: sans-serif;
+				font-size: 11px;
+			}
+        </style>
+    </head>
+
+    <body>
+
+       <div id="biaoti">全球经济保持稳定增长，潜在GDP仍需开发<br><span>利比亚保持GDP<span style="color: steelblue;font-weight: bold;">26.7%</span>高速增长,失业率却高达<span style="color:orange;font-weight: bold;">17.7%</span>的失业率</span>
+       </div>
+
+       <div>
+<br>
+       <p id="wenben">
+根据世界银行数据，2017年全球大多数国家的经济体量正向增长。但与此同时，失业率却也居高不下，全球平均失业率高达5.5%。</p>
+       <p id="wenben">
+经历战乱后的利比亚，经济在近年的得到了一定程度的恢复，去年GDP增速超过26%。但其17.7%的失业率同时表明，该国的经济增长水平仍有极大的开发空间，社会生产能力并没有得到充分的正向利用。</p>
+       <p id="wenben">
+2002年刚刚成立的国家——东帝汶2017年的全球经济增速排名末位。东帝汶被联合国开发计划署列为亚洲最贫困国家和全球20个最落后的国家之一，经济处于重建阶段。经济以农业为主，基础设施落后，粮食不能自给，没有工业体系和制造业基础。1999年脱离印尼以来，经济主要依靠外国援助和国际机构拉动当地消费。</p>
+<br>
+	   </div>
+
+	   <div id="beizhu">数据来源：世界银行<br>制图：孙逸轩</div>
+
+
+		<div id="scatter_plot">
+		
+		
+			
+		</div>
+		<div id="title"></div>
+
+    </body>
+
+    <!-- d3线上lib -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.1.0/d3.js"></script>
+    <!-- jquery线上lib -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+
+    <script type="text/javascript">
+		// 准备画布svg
+		var fullWidth = 800;
+		var fullHeight = 600;
+		var margin = {top:20, right:50, bottom:20, left:50};  
+		var title_height = 50;
+
+		var width = fullWidth - margin.left - margin.right;
+		var height = fullHeight - margin.top - margin.bottom - title_height;
+
+		var svg = d3.select("#scatter_plot")
+					.append("svg") 
+					.attr("width", fullWidth)
+					.attr("height", fullHeight)
+					.append("g") // 在svg上加一个group,即<g>
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+					.attr("width", width)
+					.attr("height", height);
+
+		var xScale = d3.scaleLinear().range([ 0, width]);
+		var yScale = d3.scaleLinear().range([ height, 0 ]); 
+
+		var xAxis = d3.axisBottom(xScale).tickFormat(function(d) {return d + "%";});
+		var yAxis = d3.axisLeft(yScale)
+						.tickFormat(function(d) {
+							return d + "%";
+						});
+
+
+		d3.csv("unemployment_and_GDPgrowth.csv", function(data) {
+
+
+			xScale.domain(
+				d3.extent(data, function(d) {
+					return +d.GDP_growth;
+				}));
+
+			yScale.domain(
+				d3.extent(data, function(d) {
+					return +d.Unemployment_total*1.1;
+				}));
+
+			var circles = svg.selectAll("circle")
+							.data(data)
+							.enter()
+							.append("circle");
+
+
+			// 设置circle们的属性
+			circles.attr("cx", function(d) { 
+					return xScale(+d.GDP_growth); 
+				})
+				.attr("cy", function(d) {
+					return yScale(+d.Unemployment_total);
+				})
+				.attr("r", 5) 
+				.attr("r", function(d){
+					if (d.Country=='World'){
+						return 10}
+					else {return 5}
+				})
+				.attr("fill", function(d){
+					if (d.Country=='World'){
+						return "orange"}
+					else if (d.GDP_growth>0){
+						return "steelblue"}
+					else
+					{return "steelblue"
+					}
+				})
+				.append("title")
+				.text(function(d) {
+					return d.Country + "的失业率为" + d.Unemployment_total + "%,"+"GDP增速为" + d.GDP_growth + "%";
+				});
+
+			
+			svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," +height+ ")")
+				.call(xAxis);
+
+			svg.append("g")
+				.attr("class", "y axis")
+				.call(yAxis);
+		});
+        var wenben =svg.append("text")
+					  .text("2017世界各国GDP增速与失业率")
+					  .attr("transform", "translate("+330+ ","+ 100+")")
+					  .attr("font-size","28px")
+					  .attr("font-weight","bold");
+    </script>
+
+</html>
+
